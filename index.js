@@ -22,6 +22,10 @@ app.use(express.json());
 app.use(express.static('public'));
 
 // Routes
+app.get('/', (req, res) => {
+    res.redirect('/login.html');
+});
+
 app.use('/api/auth', authRoutes);
 
 // Socket.IO avec authentification
