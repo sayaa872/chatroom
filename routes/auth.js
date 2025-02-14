@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
+const auth = require('../middleware/auth');
 
 // Inscription
 router.post('/register', async (req, res) => {
@@ -28,7 +29,7 @@ router.post('/register', async (req, res) => {
       [username, hashedPassword]
     );
 
-    // Générer le token
+    // Créer le token
     const token = jwt.sign(
       { id: result.rows[0].id, username },
       process.env.JWT_SECRET,
@@ -59,15 +60,16 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Identifiants invalides' });
     }
 
-    // Vérifier le mot de passe
     const user = result.rows[0];
+
+    // Vérifier le mot de passe
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
       return res.status(401).json({ error: 'Identifiants invalides' });
     }
 
-    // Générer le token
+    // Créer le token
     const token = jwt.sign(
       { id: user.id, username: user.username },
       process.env.JWT_SECRET,
@@ -84,6 +86,11 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Vérifier le token
+router.get('/me', auth, (req, res) => {
+  res.json({ user: req.user });
 });
 
 module.exports = router;
