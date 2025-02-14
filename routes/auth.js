@@ -8,6 +8,7 @@ const auth = require('../middleware/auth');
 // Inscription
 router.post('/register', async (req, res) => {
   try {
+    console.log('Tentative d\'inscription:', req.body);
     const { username, password } = req.body;
     
     // Vérifier si l'utilisateur existe déjà
@@ -41,6 +42,7 @@ router.post('/register', async (req, res) => {
       token
     });
   } catch (error) {
+    console.error('Erreur d\'inscription:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -48,6 +50,7 @@ router.post('/register', async (req, res) => {
 // Connexion
 router.post('/login', async (req, res) => {
   try {
+    console.log('Tentative de connexion:', req.body);
     const { username, password } = req.body;
 
     // Vérifier si l'utilisateur existe
@@ -84,6 +87,7 @@ router.post('/login', async (req, res) => {
       token
     });
   } catch (error) {
+    console.error('Erreur de connexion:', error);
     res.status(500).json({ error: error.message });
   }
 });
