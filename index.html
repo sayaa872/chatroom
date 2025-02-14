@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat en Direct</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/socket.io/socket.io.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .chat-container {
+      width: 90%;
+      max-width: 1000px;
+      height: 80vh;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      display: flex;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+      border-radius: 15px 0 0 15px;
+      padding: 20px;
+    }
+
+    .online-users {
+      margin-top: 20px;
+    }
+
+    .user-item {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-item.online {
+      background: #e9ecef;
+    }
+
+    .user-status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #28a745;
+    }
+
+    .main-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .chat-header {
+      padding-bottom: 20px;
+      border-bottom: 1px solid #dee2e6;
+      margin-bottom: 20px;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .message {
+      margin: 10px 0;
+      max-width: 70%;
+      padding: 10px 15px;
+      border-radius: 15px;
+      position: relative;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.sent {
+      background: #007bff;
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 5px;
+    }
+
+    .message.received {
+      background: #e9ecef;
+      color: #212529;
+      border-bottom-left-radius: 5px;
+    }
+
+    .message-info {
+      font-size: 0.75rem;
+      margin-top: 5px;
+      opacity: 0.7;
+    }
+
+    #form {
+      display: flex;
+      gap: 10px;
+      padding: 20px 0 0 0;
+      border-top: 1px solid #dee2e6;
+    }
+
+    #input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #dee2e6;
+      border-radius: 25px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    #input:focus {
+      border-color: #007bff;
+    }
+
+    button {
+      padding: 12px 25px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .typing-indicator {
+      padding: 10px;
+      font-style: italic;
+      color: #6c757d;
+    }
+
+    .emoji-picker {
+      position: relative;
+      display: inline-block;
+    }
+
+    .emoji-button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0 10px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      
+      .message {
+        max-width: 85%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="sidebar">
+      <h2>En ligne</h2>
+      <div class="online-users" id="online-users">
+        <!-- Les utilisateurs en ligne seront ajoutés ici -->
+      </div>
+    </div>
+    
+    <div class="main-chat">
+      <div class="chat-header">
+        <h1>Chat en Direct</h1>
+        <div id="typing"></div>
+      </div>
+      
+      <div id="messages"></div>
+      
+      <form id="form">
+        <div class="emoji-picker">
+          <button type="button" class="emoji-button">😊</button>
+        </div>
+        <input id="input" autocomplete="off" placeholder="Écrivez votre message..." />
+        <button type="submit">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+    const typing = document.getElementById('typing');
+    let timeout;
+
+    // Générer un nom d'utilisateur aléatoire
+    const username = 'User_' + Math.floor(Math.random() * 1000);
+
+    function addMessage(msg, isSent = false) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+      
+      const messageContent = document.createElement('div');
+      messageContent.className = 'message-content';
+      messageContent.textContent = msg.content;
+      
+      const messageInfo = document.createElement('div');
+      messageInfo.className = 'message-info';
+      messageInfo.textContent = `${msg.username} • ${new Date().toLocaleTimeString()}`;
+      
+      messageDiv.appendChild(messageContent);
+      messageDiv.appendChild(messageInfo);
+      messages.appendChild(messageDiv);
+      
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (input.value) {
+        const messageData = {
+          content: input.value,
+          username: username
+        };
+        socket.emit('chat message', messageData);
+        addMessage(messageData, true);
+        input.value = '';
+      }
+    });
+
+    input.addEventListener('input', () => {
+      socket.emit('typing', username);
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        socket.emit('stop typing', username);
+      }, 1000);
+    });
+
+    socket.on('chat message', (msg) => {
+      if (msg.username !== username) {
+        addMessage(msg);
+      }
+    });
+
+    socket.on('user typing', (user) => {
+      if (user !== username) {
+        typing.textContent = `${user} est en train d'écrire...`;
+      }
+    });
+
+    socket.on('stop typing', () => {
+      typing.textContent = '';
+    });
+
+    // Gestion des emojis
+    const emojiButton = document.querySelector('.emoji-button');
+    const emojis = ['😊', '😂', '❤️', '👍', '🎉', '🌟', '🤔', '😎'];
+    let currentEmojiIndex = 0;
+
+    emojiButton.addEventListener('click', () => {
+      input.value += emojis[currentEmojiIndex];
+      currentEmojiIndex = (currentEmojiIndex + 1) % emojis.length;
+      emojiButton.textContent = emojis[currentEmojiIndex];
+    });
+  </script>
+</body>
+</html>
