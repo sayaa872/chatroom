@@ -1,38 +1,90 @@
+require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const { createServer } = require('node:http');
 const { Server } = require('socket.io');
+const authRoutes = require('./routes/auth');
+const auth = require('./middleware/auth');
+const pool = require('./config/database');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
-
-const users = new Set();
-
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || "*",
+    methods: ["GET", "POST"]
+  }
 });
 
-io.on('connection', (socket) => {
-  console.log('un utilisateur s\'est connecté');
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
 
-  socket.on('chat message', (msg) => {
-    socket.broadcast.emit('chat message', msg);
+// Routes
+app.use('/api/auth', authRoutes);
+
+// Socket.IO avec authentification
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.auth.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = decoded;
+    next();
+  } catch (err) {
+    next(new Error('Authentication error'));
+  }
+});
+
+io.on('connection', async (socket) => {
+  console.log(`Utilisateur connecté: ${socket.user.username}`);
+
+  // Charger l'historique des messages
+  try {
+    const messages = await pool.query(
+      `SELECT messages.*, users.username 
+       FROM messages 
+       JOIN users ON messages.user_id = users.id 
+       ORDER BY messages.created_at DESC 
+       LIMIT 50`
+    );
+    socket.emit('message_history', messages.rows.reverse());
+  } catch (error) {
+    console.error('Erreur lors du chargement des messages:', error);
+  }
+
+  socket.on('chat message', async (msg) => {
+    try {
+      const result = await pool.query(
+        'INSERT INTO messages (user_id, content) VALUES ($1, $2) RETURNING *',
+        [socket.user.id, msg]
+      );
+      
+      const message = {
+        ...result.rows[0],
+        username: socket.user.username
+      };
+      
+      io.emit('chat message', message);
+    } catch (error) {
+      console.error('Erreur lors de l\'enregistrement du message:', error);
+    }
   });
 
-  socket.on('typing', (username) => {
-    socket.broadcast.emit('user typing', username);
+  socket.on('typing', () => {
+    socket.broadcast.emit('user typing', socket.user.username);
   });
 
-  socket.on('stop typing', (username) => {
-    socket.broadcast.emit('stop typing', username);
+  socket.on('stop typing', () => {
+    socket.broadcast.emit('stop typing', socket.user.username);
   });
 
   socket.on('disconnect', () => {
-    console.log('un utilisateur s\'est déconnecté');
+    console.log(`Utilisateur déconnecté: ${socket.user.username}`);
   });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`serveur en marche sur le port ${PORT}`);
+  console.log(`Serveur en marche sur le port ${PORT}`);
 });
