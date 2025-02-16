@@ -9,6 +9,7 @@ const pool = require('./config/database');
 const messagesRoutes = require('./routes/messages');
 const friendsRoutes = require('./routes/friends');
 const conversationsRoutes = require('./routes/conversations');
+const auth = require('./middleware/auth');
 
 const app = express();
 const server = createServer(app);
