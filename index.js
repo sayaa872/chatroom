@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 const authRoutes = require('./routes/auth');
 const pool = require('./config/database');
 const messagesRoutes = require('./routes/messages');
+const friendsRoutes = require('./routes/friends');
+const conversationsRoutes = require('./routes/conversations');
 
 const app = express();
 const server = createServer(app);
@@ -25,6 +27,8 @@ app.use(express.static('public'));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/friends', friendsRoutes);
+app.use('/api/conversations', conversationsRoutes);
 
 // Redirection vers login
 app.get('/', (req, res) => {
