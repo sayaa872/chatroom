@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/friends.css">
+    <link rel="stylesheet" href="/css/private-messages.css">
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
@@ -86,7 +88,7 @@
             <div class="view hidden" id="friendsView">
                 <div class="friends-header">
                     <h2>Gestion des amis</h2>
-                    <button class="add-friend-btn">
+                    <button class="add-friend-btn" onclick="openAddFriendModal()">
                         <i class="fas fa-user-plus"></i>
                         Ajouter un ami
                     </button>
@@ -102,16 +104,31 @@
 
             <!-- Private Messages View -->
             <div class="view hidden" id="privateView">
-                <div class="conversations-list" id="conversationsList"></div>
-                <div class="private-chat">
-                    <div class="private-chat-header">
-                        <h3 id="currentConversationName">Sélectionnez une conversation</h3>
+                <div class="private-chat-container">
+                    <div class="conversations-list">
+                        <div class="conversations-header">
+                            <h3>Conversations</h3>
+                        </div>
+                        <div id="conversationsList"></div>
                     </div>
-                    <div class="private-messages" id="privateMessages"></div>
-                    <form id="privateMessageForm" class="message-form">
-                        <input type="text" placeholder="Message privé...">
-                        <button type="submit">Envoyer</button>
-                    </form>
+                    
+                    <div class="active-conversation">
+                        <div class="conversation-header">
+                            <h3 id="currentConversationName">Sélectionnez une conversation</h3>
+                        </div>
+                        <div class="private-messages" id="privateMessages"></div>
+                        <form id="privateMessageForm" class="message-form">
+                            <div class="message-input-container">
+                                <input type="text" id="privateMessageInput" placeholder="Écrivez votre message...">
+                                <button type="button" class="emoji-btn">
+                                    <i class="far fa-smile"></i>
+                                </button>
+                            </div>
+                            <button type="submit" class="send-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </main>
@@ -120,9 +137,15 @@
     <!-- Modals -->
     <div class="modal" id="addFriendModal">
         <div class="modal-content">
-            <h3>Ajouter un ami</h3>
+            <div class="modal-header">
+                <h3>Ajouter un ami</h3>
+                <button class="close-modal" onclick="closeAddFriendModal()">&times;</button>
+            </div>
             <form id="addFriendForm">
-                <input type="text" placeholder="Nom d'utilisateur">
+                <div class="form-group">
+                    <label for="friendUsername">Nom d'utilisateur</label>
+                    <input type="text" id="friendUsername" required>
+                </div>
                 <button type="submit">Envoyer la demande</button>
             </form>
         </div>
@@ -213,5 +236,7 @@
         });
     </script>
     <script src="/js/chat.js"></script>
+    <script src="/js/friends.js"></script>
+    <script src="/js/private-messages.js"></script>
 </body>
 </html> 
