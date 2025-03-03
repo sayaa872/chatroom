@@ -135,6 +135,9 @@ document.getElementById('privateMessageForm').addEventListener('submit', async (
             `;
             messagesContainer.appendChild(messageElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            // Émettre le message à tous les participants de la conversation
+            socket.emit('private message', message);
         }
     } catch (error) {
         console.error('Erreur envoi message:', error);

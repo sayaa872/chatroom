@@ -31,29 +31,6 @@ app.use('/api/messages', messagesRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/conversations', conversationsRoutes);
 
-// Route pour les messages
-app.post('/api/messages', auth, async (req, res) => {
-    try {
-        const { content } = req.body;
-        const result = await pool.query(
-            'INSERT INTO messages (user_id, content) VALUES ($1, $2) RETURNING id, content, created_at',
-            [req.user.id, content]
-        );
-        
-        const message = {
-            ...result.rows[0],
-            username: req.user.username
-        };
-        
-        // Émettre le message à tous les clients
-        io.emit('chat message', message);
-        
-        res.status(201).json(message);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // Redirection vers login
 app.get('/', (req, res) => {
     res.redirect('/login.html');
