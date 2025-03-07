@@ -11,15 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Cacher toutes les vues
             Object.values(views).forEach(view => view.classList.add('hidden'));
             
-            // Retirer la classe active de tous les boutons
-            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-            
             // Afficher la vue sélectionnée
             const viewName = button.dataset.view;
             views[viewName].classList.remove('hidden');
-            
-            // Ajouter la classe active au bouton
-            button.classList.add('active');
         });
     });
 

@@ -136,16 +136,17 @@ body {
 }
 
 .nav-item {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    color: var(--gray-500);
-    border: none;
-    background: none;
-    width: 100%;
+    background: var(--white);
+    color: var(--text-color);
+    padding: 1rem;
     border-radius: 0.5rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.3s;
+}
+
+.nav-item:hover {
+    background: var(--primary-color);
+    color: var(--white);
 }
 
 .nav-item i {
