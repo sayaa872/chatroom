@@ -6,130 +6,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/friends.css">
-    <link rel="stylesheet" href="/css/private-messages.css">
+    <link rel="stylesheet" href="/css/mobile.css">
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="user-profile">
-                <div class="user-avatar">
-                    <img src="https://ui-avatars.com/api/?name=John+Doe" alt="Avatar" id="userAvatar">
-                </div>
-                <div class="user-info">
-                    <h3 id="userName">Chargement...</h3>
-                    <span class="status online">En ligne</span>
-                </div>
+        <!-- User Profile -->
+        <div class="user-profile">
+            <div class="user-avatar" id="userInitials">JD</div>
+            <div class="user-info">
+                <h3 id="userName">Chargement...</h3>
+                <span class="status">En ligne</span>
             </div>
+        </div>
 
-            <!-- Navigation -->
-            <nav class="sidebar-nav">
-                <button class="nav-item active" data-view="chat">
-                    <i class="fas fa-comments"></i>
-                    <span>Chat général</span>
-                </button>
-                <button class="nav-item" data-view="friends">
-                    <i class="fas fa-user-friends"></i>
-                    <span>Amis</span>
-                    <span class="badge" id="friendRequestCount">0</span>
-                </button>
-                <button class="nav-item" data-view="private">
-                    <i class="fas fa-envelope"></i>
-                    <span>Messages privés</span>
-                </button>
-            </nav>
+        <!-- Navigation -->
+        <div class="nav-items">
+            <button class="nav-item active" id="chatBtn">
+                <i class="fas fa-comments"></i>
+                Chat général
+            </button>
+            <button class="nav-item" id="friendsBtn">
+                <i class="fas fa-user-friends"></i>
+                Amis
+            </button>
+            <button class="nav-item" id="privateBtn">
+                <i class="fas fa-envelope"></i>
+                Messages privés
+            </button>
+        </div>
 
-            <!-- Friends List -->
-            <div class="friends-list">
-                <h4>Amis en ligne</h4>
-                <div id="onlineFriends"></div>
-            </div>
-        </aside>
+        <!-- Friends List -->
+        <div class="friends-list-section">
+            <h4>Amis en ligne</h4>
+            <div id="onlineFriends"></div>
+        </div>
 
         <!-- Main Content -->
-        <main class="main-content">
-            <!-- Chat View -->
-            <!-- <div class="view" id="chatView"> -->
-            <!--     <div class="chat-header"> -->
-            <!--         <h2>Chat général</h2> -->
-            <!--         <div class="header-actions"> -->
-            <!--             <button class="theme-toggle"> -->
-            <!--                 <i class="fas fa-moon"></i> -->
-            <!--             </button> -->
-            <!--             <button class="logout-btn"> -->
-            <!--                 <i class="fas fa-sign-out-alt"></i> -->
-            <!--                 Déconnexion -->
-            <!--             </button> -->
-            <!--         </div> -->
-            <!--     </div> -->
-            <!--     <div class="messages-container" id="messages"></div> -->
-            <!--     <form id="messageForm" class="message-form"> -->
-            <!--         <div class="message-input-container"> -->
-            <!--             <input type="text" id="messageInput" placeholder="Écrivez votre message..."> -->
-            <!--             <button type="button" class="emoji-btn"> -->
-            <!--                 <i class="far fa-smile"></i> -->
-            <!--             </button> -->
-            <!--             <button type="button" class="attach-btn"> -->
-            <!--                 <i class="fas fa-paperclip"></i> -->
-            <!--             </button> -->
-            <!--         </div> -->
-            <!--         <button type="submit" class="send-btn"> -->
-            <!--             <i class="fas fa-paper-plane"></i> -->
-            <!--         </button> -->
-            <!--     </form> -->
-            <!-- </div> -->
+        <div id="chatView" class="view">
+            <div id="messages"></div>
+        </div>
 
-            <!-- Friends View -->
-            <div class="view hidden" id="friendsView">
-                <div class="friends-header">
-                    <h2>Gestion des amis</h2>
-                    <button class="add-friend-btn" onclick="openAddFriendModal()">
-                        <i class="fas fa-user-plus"></i>
-                        Ajouter un ami
-                    </button>
-                </div>
-
-                <div class="friend-requests">
-                    <h3>Demandes d'amitié</h3>
-                    <div id="friendRequests"></div>
-                </div>
-
-                <div class="friends-grid" id="friendsList"></div>
+        <div id="friendsView" class="view hidden">
+            <div class="friends-header">
+                <h2>Mes amis</h2>
+                <button class="add-friend-btn" id="addFriendBtn">
+                    <i class="fas fa-user-plus"></i>
+                    Ajouter un ami
+                </button>
             </div>
+            <div id="friendsList"></div>
+        </div>
 
-            <!-- Private Messages View -->
-            <div class="view hidden" id="privateView">
-                <div class="private-chat-container">
-                    <div class="conversations-list">
-                        <div class="conversations-header">
-                            <h3>Conversations</h3>
-                        </div>
-                        <div id="conversationsList"></div>
-                    </div>
-                    
-                    <div class="active-conversation">
-                        <div class="conversation-header">
-                            <h3 id="currentConversationName">Sélectionnez une conversation</h3>
-                        </div>
-                        <div class="private-messages" id="privateMessages"></div>
-                        <form id="privateMessageForm" class="message-form">
-                            <div class="message-input-container">
-                                <input type="text" id="privateMessageInput" placeholder="Écrivez votre message...">
-                                <button type="button" class="emoji-btn">
-                                    <i class="far fa-smile"></i>
-                                </button>
-                            </div>
-                            <button type="submit" class="send-btn">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </main>
+        <div id="privateView" class="view hidden">
+            <h2>Messages privés</h2>
+            <div id="conversationsList"></div>
+        </div>
     </div>
 
     <!-- Modals -->
@@ -137,7 +69,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Ajouter un ami</h3>
-                <button class="close-modal" onclick="closeAddFriendModal()">&times;</button>
+                <button class="close-modal" id="closeModalBtn">&times;</button>
             </div>
             <form id="addFriendForm">
                 <div class="form-group">
@@ -156,85 +88,225 @@
             window.location.href = '/login.html';
         }
 
-        let currentUser;
+        // Définition des variables globales
+        let currentUser = null;
         const socket = io({
             auth: {
                 token: token
             }
         });
 
-        const messages = document.getElementById('messages');
-        const form = document.getElementById('form');
-        const input = document.getElementById('input');
+        // Récupération des éléments DOM
+        const chatBtn = document.getElementById('chatBtn');
+        const friendsBtn = document.getElementById('friendsBtn');
+        const privateBtn = document.getElementById('privateBtn');
+        const chatView = document.getElementById('chatView');
+        const friendsView = document.getElementById('friendsView');
+        const privateView = document.getElementById('privateView');
+        const addFriendBtn = document.getElementById('addFriendBtn');
+        const addFriendModal = document.getElementById('addFriendModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const addFriendForm = document.getElementById('addFriendForm');
 
-        // Chargement de l'historique des messages
-        socket.on('message_history', (msgs) => {
-            msgs.forEach(msg => addMessage(msg));
-            messages.scrollTop = messages.scrollHeight;
+        // Fonctions de navigation
+        chatBtn.addEventListener('click', () => {
+            chatView.classList.remove('hidden');
+            friendsView.classList.add('hidden');
+            privateView.classList.add('hidden');
+            
+            chatBtn.classList.add('active');
+            friendsBtn.classList.remove('active');
+            privateBtn.classList.remove('active');
         });
 
-        // Réception d'un nouveau message
-        socket.on('chat message', (msg) => {
-            addMessage(msg);
-            messages.scrollTop = messages.scrollHeight;
+        friendsBtn.addEventListener('click', () => {
+            chatView.classList.add('hidden');
+            friendsView.classList.remove('hidden');
+            privateView.classList.add('hidden');
+            
+            chatBtn.classList.remove('active');
+            friendsBtn.classList.add('active');
+            privateBtn.classList.remove('active');
+            
+            loadFriends();
         });
 
-        // Erreur d'authentification
-        socket.on('connect_error', (error) => {
-            if (error.message === 'Authentication error') {
-                localStorage.removeItem('token');
-                window.location.href = '/login.html';
+        privateBtn.addEventListener('click', () => {
+            chatView.classList.add('hidden');
+            friendsView.classList.add('hidden');
+            privateView.classList.remove('hidden');
+            
+            chatBtn.classList.remove('active');
+            friendsBtn.classList.remove('active');
+            privateBtn.classList.add('active');
+            
+            loadConversations();
+        });
+
+        // Gestion de la modal d'ajout d'ami
+        addFriendBtn.addEventListener('click', () => {
+            addFriendModal.style.display = 'flex';
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            addFriendModal.style.display = 'none';
+        });
+
+        // Chargement du profil utilisateur
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.user) {
+                    currentUser = data.user;
+                    document.getElementById('userName').textContent = data.user.username;
+                    
+                    // Set initials
+                    if (data.user.username) {
+                        const initials = data.user.username.charAt(0).toUpperCase();
+                        document.getElementById('userInitials').textContent = initials;
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur chargement profil:', error);
             }
-        });
+        }
 
-        // Envoi d'un message
-        form.addEventListener('submit', (e) => {
+        // Chargement des amis
+        async function loadFriends() {
+            try {
+                const response = await fetch('/api/friends', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const friends = await response.json();
+                displayFriends(friends);
+            } catch (error) {
+                console.error('Erreur chargement amis:', error);
+            }
+        }
+
+        // Affichage des amis
+        function displayFriends(friends) {
+            const friendsList = document.getElementById('friendsList');
+            if (!friendsList) return;
+            
+            if (friends.length === 0) {
+                friendsList.innerHTML = '<p>Vous n\'avez pas encore d\'amis.</p>';
+                return;
+            }
+            
+            friendsList.innerHTML = friends.map(friend => `
+                <div class="friend-card">
+                    <div>${friend.username}</div>
+                    <button class="message-btn" onclick="startConversation('${friend.id}')">
+                        <i class="fas fa-comment"></i> Message
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Chargement des conversations
+        async function loadConversations() {
+            try {
+                const response = await fetch('/api/conversations', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const conversations = await response.json();
+                displayConversations(conversations);
+            } catch (error) {
+                console.error('Erreur chargement conversations:', error);
+            }
+        }
+
+        // Affichage des conversations
+        function displayConversations(conversations) {
+            const conversationsList = document.getElementById('conversationsList');
+            if (!conversationsList) return;
+            
+            if (conversations.length === 0) {
+                conversationsList.innerHTML = '<p>Vous n\'avez pas encore de conversations.</p>';
+                return;
+            }
+            
+            conversationsList.innerHTML = conversations.map(conv => `
+                <div class="conversation-item" onclick="openConversation('${conv.id}')">
+                    <div class="conversation-info">
+                        <h4>${conv.participants.filter(p => p !== currentUser?.username).join(', ')}</h4>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Démarrer une conversation
+        window.startConversation = async function(friendId) {
+            try {
+                const response = await fetch('/api/conversations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ participantIds: [friendId] })
+                });
+                
+                if (response.ok) {
+                    // Changer de vue
+                    chatView.classList.add('hidden');
+                    friendsView.classList.add('hidden');
+                    privateView.classList.remove('hidden');
+                    
+                    chatBtn.classList.remove('active');
+                    friendsBtn.classList.remove('active');
+                    privateBtn.classList.add('active');
+                    
+                    // Recharger les conversations
+                    loadConversations();
+                }
+            } catch (error) {
+                console.error('Erreur création conversation:', error);
+            }
+        };
+
+        // Envoi d'une demande d'ami
+        addFriendForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (input.value) {
-                socket.emit('chat message', input.value);
-                input.value = '';
+            const username = document.getElementById('friendUsername').value;
+            
+            try {
+                const response = await fetch('/api/friends/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ friendUsername: username })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Demande d\'ami envoyée !');
+                    addFriendModal.style.display = 'none';
+                    document.getElementById('friendUsername').value = '';
+                } else {
+                    alert(data.error || 'Erreur lors de l\'envoi de la demande');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de l\'envoi de la demande');
             }
         });
 
-        function addMessage(msg) {
-            const messageElement = document.createElement('div');
-            messageElement.className = `message ${msg.username === currentUser?.username ? 'sent' : 'received'}`;
-            
-            const usernameElement = document.createElement('div');
-            usernameElement.className = 'username';
-            usernameElement.textContent = msg.username;
-            
-            const contentElement = document.createElement('div');
-            contentElement.textContent = msg.content;
-            
-            messageElement.appendChild(usernameElement);
-            messageElement.appendChild(contentElement);
-            messages.appendChild(messageElement);
-        }
-
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = '/login.html';
-        }
-
-        // Récupération des informations de l'utilisateur
-        fetch('/api/auth/me', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.error) {
-                currentUser = data.user;
-            } else {
-                localStorage.removeItem('token');
-                window.location.href = '/login.html';
-            }
-        });
+        // Initialisation
+        loadUserProfile();
     </script>
-    <script src="/js/chat.js"></script>
-    <script src="/js/friends.js"></script>
-    <script src="/js/private-messages.js"></script>
 </body>
 </html> 
