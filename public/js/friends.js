@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPendingRequests();
 });
 
-// Chargement des demandes d'amis en attente
+// Fonction pour charger et afficher les demandes d'amis
 async function loadFriendRequests() {
     try {
         const response = await fetch('/api/friends/pending', {
@@ -153,12 +153,28 @@ async function loadFriendRequests() {
         
         const requests = await response.json();
         displayFriendRequests(requests);
+        updateFriendRequestsBadge(requests.length);
     } catch (error) {
         console.error('Erreur de chargement des demandes d\'amis:', error);
     }
 }
 
-// Affichage des demandes d'amis
+// Fonction pour mettre à jour le badge
+function updateFriendRequestsBadge(count) {
+    const badge = document.getElementById('friendRequestsBadge');
+    const requestCount = document.getElementById('requestCount');
+    
+    if (count > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = count;
+        requestCount.textContent = `(${count})`;
+    } else {
+        badge.style.display = 'none';
+        requestCount.textContent = '';
+    }
+}
+
+// Fonction pour afficher les demandes d'amis
 function displayFriendRequests(requests) {
     const requestsContainer = document.getElementById('friendRequests');
     
@@ -172,7 +188,7 @@ function displayFriendRequests(requests) {
     }
     
     requestsContainer.innerHTML = requests.map(request => `
-        <div class="friend-request-item" data-request-id="${request.id}">
+        <div class="friend-request-item">
             <div class="request-user-info">
                 <div class="request-user-avatar">
                     ${request.username.charAt(0).toUpperCase()}
@@ -182,11 +198,11 @@ function displayFriendRequests(requests) {
                 </div>
             </div>
             <div class="request-actions">
-                <button class="accept-button" onclick="handleFriendRequest('${request.id}', 'accepted')">
+                <button class="accept-button" onclick="handleFriendRequest(${request.id}, 'accepted')">
                     <i class="fas fa-check"></i>
                     Accepter
                 </button>
-                <button class="reject-button" onclick="handleFriendRequest('${request.id}', 'rejected')">
+                <button class="reject-button" onclick="handleFriendRequest(${request.id}, 'rejected')">
                     <i class="fas fa-times"></i>
                     Refuser
                 </button>
@@ -195,7 +211,7 @@ function displayFriendRequests(requests) {
     `).join('');
 }
 
-// Gestion des demandes d'amis
+// Fonction pour gérer les demandes d'amis
 async function handleFriendRequest(requestId, status) {
     try {
         const response = await fetch(`/api/friends/request/${requestId}`, {
@@ -208,44 +224,34 @@ async function handleFriendRequest(requestId, status) {
         });
         
         if (response.ok) {
-            // Rafraîchir les listes
-            loadFriendRequests();
-            loadFriends();
+            // Rafraîchir les demandes et la liste d'amis
+            await loadFriendRequests();
+            await loadFriends();
             
-            if (status === 'accepted') {
-                alert('Demande d\'ami acceptée !');
-            } else {
-                alert('Demande d\'ami refusée.');
-            }
+            // Notification
+            const message = status === 'accepted' ? 'Demande acceptée !' : 'Demande refusée';
+            showNotification(message, status === 'accepted' ? 'success' : 'info');
         }
     } catch (error) {
-        console.error('Erreur de traitement de la demande:', error);
+        console.error('Erreur lors du traitement de la demande:', error);
+        showNotification('Erreur lors du traitement de la demande', 'error');
     }
 }
 
-async function loadFriends() {
-    try {
-        const response = await fetch('/api/friends', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        
-        friends = await response.json();
-        displayFriends(friends);
-        
-        // Charger aussi les demandes d'amis
-        loadFriendRequests();
-    } catch (error) {
-        console.error('Erreur de chargement des amis:', error);
-    }
+// Fonction pour afficher une notification
+function showNotification(message, type = 'info') {
+    // Si vous avez une bibliothèque de notifications, utilisez-la ici
+    alert(message);
 }
 
-// Ajoutez cette fonction pour charger les demandes périodiquement
+// Démarrer le polling des demandes d'amis
 function startFriendRequestsPolling() {
-    loadFriendRequests(); // Chargement initial
-    setInterval(loadFriendRequests, 30000); // Rafraîchir toutes les 30 secondes
+    loadFriendRequests();
+    // Rafraîchir toutes les 30 secondes
+    setInterval(loadFriendRequests, 30000);
 }
 
-// Appelez cette fonction au chargement de la page
+// Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', () => {
     startFriendRequestsPolling();
 }); 

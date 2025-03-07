@@ -38,22 +38,21 @@
         <div class="content-area">
             <!-- Friends View -->
             <div id="friendsView" class="view active">
-                <div class="section-header">
-                    <h2 class="section-title">Mes amis</h2>
-                    <button id="addFriendBtn" class="add-btn">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Ajouter</span>
-                    </button>
-                </div>
-                <div id="friendsList">
-                    <!-- Les amis seront ajoutés ici dynamiquement -->
-                    <div class="empty-state" id="emptyFriends">
-                        <i class="fas fa-user-friends"></i>
-                        <p>Vous n'avez pas encore d'amis</p>
-                        <button class="add-btn" onclick="document.getElementById('addFriendBtn').click()">
-                            <i class="fas fa-user-plus"></i>
-                            <span>Ajouter un ami</span>
-                        </button>
+                <div class="friends-container">
+                    <!-- Section des demandes d'amis -->
+                    <div class="friend-requests-section">
+                        <h3>Demandes d'amis <span id="requestCount"></span></h3>
+                        <div id="friendRequests" class="friend-requests-list">
+                            <!-- Les demandes seront ajoutées ici -->
+                        </div>
+                    </div>
+                    
+                    <!-- Liste des amis existante -->
+                    <div class="friends-list-section">
+                        <h3>Mes amis</h3>
+                        <div id="friendsList">
+                            <!-- La liste des amis sera ajoutée ici -->
+                        </div>
                     </div>
                 </div>
             </div>
