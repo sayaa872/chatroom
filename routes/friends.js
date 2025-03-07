@@ -83,16 +83,18 @@ router.put('/request/:id', auth, async (req, res) => {
 // Obtenir les demandes d'ami en attente
 router.get('/pending', auth, async (req, res) => {
     try {
-        const requests = await pool.query(
-            `SELECT f.id, u.username 
-             FROM friendships f 
-             JOIN users u ON f.user_id = u.id 
-             WHERE f.friend_id = $1 AND f.status = 'pending'`,
+        const pendingRequests = await pool.query(
+            `SELECT fr.id, fr.sender_id, u.username 
+             FROM friend_requests fr 
+             JOIN users u ON fr.sender_id = u.id 
+             WHERE fr.recipient_id = $1 AND fr.status = 'pending'`,
             [req.user.id]
         );
-        res.json(requests.rows);
+        
+        res.json(pendingRequests.rows);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Erreur lors de la récupération des demandes d\'amis:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
     }
 });
 

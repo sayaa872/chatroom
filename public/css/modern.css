@@ -10,6 +10,7 @@
   --shadow: 0 4px 12px rgba(0,0,0,0.1);
   --transition: all 0.3s ease;
   --radius: 12px;
+  --light-bg: #f8f9fa;
 }
 
 * {
@@ -557,4 +558,126 @@ body {
   justify-content: center;
   font-weight: 600;
   box-shadow: 0 2px 5px rgba(231, 76, 60, 0.5);
-} 
+}
+
+/* Style pour les demandes d'amis */
+.friend-requests-container {
+  background: var(--light-bg);
+  border-radius: 15px;
+  padding: 15px;
+  margin: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.friend-requests-container h3 {
+  color: var(--dark);
+  font-size: 16px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.friend-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.friend-request-item {
+  background: white;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.request-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.request-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.request-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.accept-button, .reject-button {
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: transform 0.2s;
+}
+
+.accept-button {
+  background: var(--success);
+  color: white;
+}
+
+.reject-button {
+  background: var(--danger);
+  color: white;
+}
+
+.accept-button:hover, .reject-button:hover {
+  transform: scale(1.05);
+}
+
+/* Style pour le bouton de déconnexion */
+.logout-button {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(220, 53, 69, 0.3);
+}
+
+.logout-button i {
+  font-size: 16px;
+}
+
+.logout-button:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+.logout-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.empty-requests {
+  text-align: center;
+  padding: 20px;
+  color: var(--dark);
+  font-style: italic;
+  background: white;
+  border-radius: 10px;
+  margin: 10px 0;
+}

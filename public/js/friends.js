@@ -161,27 +161,34 @@ async function loadFriendRequests() {
 // Affichage des demandes d'amis
 function displayFriendRequests(requests) {
     const requestsContainer = document.getElementById('friendRequests');
-    const emptyRequests = document.getElementById('emptyRequests');
     
-    if (requests.length === 0) {
-        emptyRequests.style.display = 'flex';
-        requestsContainer.innerHTML = '';
+    if (!requests || requests.length === 0) {
+        requestsContainer.innerHTML = `
+            <div class="empty-requests">
+                <p>Aucune demande d'ami en attente</p>
+            </div>
+        `;
         return;
     }
     
-    emptyRequests.style.display = 'none';
     requestsContainer.innerHTML = requests.map(request => `
-        <div class="friend-request-card">
-            <div class="friend-info">
-                <div class="friend-avatar">${request.username.charAt(0).toUpperCase()}</div>
-                <div class="friend-name">${request.username}</div>
+        <div class="friend-request-item" data-request-id="${request.id}">
+            <div class="request-user-info">
+                <div class="request-user-avatar">
+                    ${request.username.charAt(0).toUpperCase()}
+                </div>
+                <div class="request-user-name">
+                    ${request.username}
+                </div>
             </div>
-            <div class="friend-request-actions">
-                <button class="accept-btn" onclick="handleFriendRequest('${request.id}', 'accepted')">
+            <div class="request-actions">
+                <button class="accept-button" onclick="handleFriendRequest('${request.id}', 'accepted')">
                     <i class="fas fa-check"></i>
+                    Accepter
                 </button>
-                <button class="reject-btn" onclick="handleFriendRequest('${request.id}', 'rejected')">
+                <button class="reject-button" onclick="handleFriendRequest('${request.id}', 'rejected')">
                     <i class="fas fa-times"></i>
+                    Refuser
                 </button>
             </div>
         </div>
@@ -230,4 +237,15 @@ async function loadFriends() {
     } catch (error) {
         console.error('Erreur de chargement des amis:', error);
     }
-} 
+}
+
+// Ajoutez cette fonction pour charger les demandes périodiquement
+function startFriendRequestsPolling() {
+    loadFriendRequests(); // Chargement initial
+    setInterval(loadFriendRequests, 30000); // Rafraîchir toutes les 30 secondes
+}
+
+// Appelez cette fonction au chargement de la page
+document.addEventListener('DOMContentLoaded', () => {
+    startFriendRequestsPolling();
+}); 
