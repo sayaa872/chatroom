@@ -127,6 +127,30 @@
                 alert('Erreur de connexion au serveur');
             }
         });
+
+        // Vérifier si on est déjà connecté
+        (function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Vérifier que le token est valide
+                fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.user) {
+                        // Token valide, rediriger vers le chat
+                        window.location.href = '/chat.html';
+                    }
+                })
+                .catch(err => {
+                    // Si erreur, supprimer le token
+                    localStorage.removeItem('token');
+                });
+            }
+        })();
     </script>
 </body>
 </html> 

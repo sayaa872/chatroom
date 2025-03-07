@@ -34,7 +34,7 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign(
       { id: result.rows[0].id, username },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '30d' }
     );
 
     res.status(201).json({
@@ -76,7 +76,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+      { expiresIn: '30d' }
     );
 
     res.json({
@@ -95,6 +95,21 @@ router.post('/login', async (req, res) => {
 // Vérifier le token
 router.get('/me', auth, (req, res) => {
   res.json({ user: req.user });
+});
+
+// Rafraîchir le token
+router.post('/refresh', auth, (req, res) => {
+  try {
+    const token = jwt.sign(
+      { id: req.user.id, username: req.user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    res.json({ token });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 module.exports = router;
