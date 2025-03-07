@@ -17,25 +17,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Chargement du profil
-    const loadProfile = async () => {
+    // Fonction pour charger les informations de l'utilisateur
+    async function loadUserInfo() {
         try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
             const response = await fetch('/api/auth/me', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
+
+            if (!response.ok) {
+                throw new Error('Erreur d\'authentification');
+            }
+
             const data = await response.json();
             
-            if (data.user) {
-                document.getElementById('userName').textContent = data.user.username;
-            }
+            // Mettre à jour le nom d'utilisateur et l'initiale
+            document.getElementById('username').textContent = data.username;
+            document.getElementById('userInitial').textContent = data.username.charAt(0).toUpperCase();
+            
         } catch (error) {
-            console.error('Erreur chargement profil:', error);
+            console.error('Erreur:', error);
+            window.location.href = '/login.html';
         }
-    };
+    }
 
-    loadProfile();
+    // Fonction de déconnexion
+    function logout() {
+        localStorage.removeItem('token'); // Supprimer le token
+        window.location.href = '/login.html'; // Rediriger vers la page de connexion
+    }
+
+    // Appeler loadUserInfo au chargement de la page
+    loadUserInfo();
 
     // Envoi de message
     const messageForm = document.getElementById('messageForm');

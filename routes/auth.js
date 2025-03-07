@@ -93,8 +93,22 @@ router.post('/login', async (req, res) => {
 });
 
 // Vérifier le token
-router.get('/me', auth, (req, res) => {
-  res.json({ user: req.user });
+router.get('/me', auth, async (req, res) => {
+  try {
+    const user = await pool.query(
+      'SELECT id, username FROM users WHERE id = $1',
+      [req.user.id]
+    );
+
+    if (user.rows.length === 0) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+
+    res.json(user.rows[0]);
+  } catch (error) {
+    console.error('Erreur:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 // Rafraîchir le token

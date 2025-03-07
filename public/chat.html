@@ -12,16 +12,19 @@
 <body>
     <div class="app-container">
         <div class="app-header">
-            <div class="user-profile">
-                <div class="user-avatar" id="userInitials">T</div>
-                <div class="user-info">
-                    <h3 id="userName">Chargement...</h3>
+            <div class="header">
+                <div class="profile-info">
+                    <div class="avatar">
+                        <span id="userInitial"></span>
+                    </div>
+                    <span id="username">Chargement...</span>
                     <span class="status">En ligne</span>
                 </div>
+                <button id="logoutBtn" class="logout-button" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Se déconnecter
+                </button>
             </div>
-            <button id="logoutBtn" class="logout-btn" title="Déconnexion">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
         </div>
 
         <div class="nav-container">
