@@ -95,18 +95,14 @@ io.on('connection', async (socket) => {
         console.log(`Utilisateur déconnecté: ${socket.user.username}`);
     });
 
-    // Gestion des messages privés en temps réel
     socket.on('private message', async (data) => {
         try {
-            // Trouver tous les participants à cette conversation
             const participants = await pool.query(
                 'SELECT user_id FROM conversation_participants WHERE conversation_id = $1',
                 [data.conversation_id]
             );
             
-            // Émettre le message à tous les participants connectés
             participants.rows.forEach(participant => {
-                // Ne pas renvoyer au émetteur du message
                 if (participant.user_id !== socket.user.id) {
                     const participantSocket = findSocketByUserId(participant.user_id);
                     if (participantSocket) {
@@ -135,91 +131,3 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Serveur en marche sur le port ${PORT}`);
 });
-
-// Chargement des demandes d'amis en attente
-async function loadFriendRequests() {
-  try {
-    const response = await fetch('/api/friends/pending', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    
-    const requests = await response.json();
-    displayFriendRequests(requests);
-  } catch (error) {
-    console.error('Erreur de chargement des demandes d\'amis:', error);
-  }
-}
-
-// Affichage des demandes d'amis
-function displayFriendRequests(requests) {
-  const requestsContainer = document.getElementById('friendRequests');
-  const emptyRequests = document.getElementById('emptyRequests');
-  
-  if (requests.length === 0) {
-    emptyRequests.style.display = 'flex';
-    requestsContainer.innerHTML = '';
-    return;
-  }
-  
-  emptyRequests.style.display = 'none';
-  requestsContainer.innerHTML = requests.map(request => `
-    <div class="friend-request-card">
-      <div class="friend-info">
-        <div class="friend-avatar">${request.username.charAt(0).toUpperCase()}</div>
-        <div class="friend-name">${request.username}</div>
-      </div>
-      <div class="friend-request-actions">
-        <button class="accept-btn" onclick="handleFriendRequest('${request.id}', 'accepted')">
-          <i class="fas fa-check"></i>
-        </button>
-        <button class="reject-btn" onclick="handleFriendRequest('${request.id}', 'rejected')">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-    </div>
-  `).join('');
-}
-
-// Gestion des demandes d'amis
-window.handleFriendRequest = async function(requestId, status) {
-  try {
-    const response = await fetch(`/api/friends/request/${requestId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ status })
-    });
-    
-    if (response.ok) {
-      // Rafraîchir les listes
-      loadFriendRequests();
-      loadFriends();
-      
-      if (status === 'accepted') {
-        alert('Demande d\'ami acceptée !');
-      } else {
-        alert('Demande d\'ami refusée.');
-      }
-    }
-  } catch (error) {
-    console.error('Erreur de traitement de la demande:', error);
-  }
-};
-
-async function loadFriends() {
-  try {
-    const response = await fetch('/api/friends', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    
-    friends = await response.json();
-    displayFriends(friends);
-    
-    // Charger aussi les demandes d'amis
-    loadFriendRequests();
-  } catch (error) {
-    console.error('Erreur de chargement des amis:', error);
-  }
-}
