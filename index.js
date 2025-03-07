@@ -51,68 +51,81 @@ io.use(async (socket, next) => {
 io.on('connection', async (socket) => {
     console.log(`Utilisateur connecté: ${socket.user.username}`);
 
-    // Charger l'historique des messages
+    // Charger les conversations de l'utilisateur
     try {
-        const messages = await pool.query(
-            `SELECT messages.*, users.username 
-             FROM messages 
-             JOIN users ON messages.user_id = users.id 
-             ORDER BY messages.created_at DESC 
-             LIMIT 50`
+        const conversations = await pool.query(
+            `SELECT DISTINCT pc.id as conversation_id, 
+                u.username, 
+                u.id as other_user_id
+            FROM private_conversations pc
+            JOIN conversation_participants cp ON pc.id = cp.conversation_id
+            JOIN conversation_participants cp2 ON pc.id = cp2.conversation_id
+            JOIN users u ON cp2.user_id = u.id
+            WHERE cp.user_id = $1 AND cp2.user_id != $1`,
+            [socket.user.id]
         );
-        socket.emit('message_history', messages.rows.reverse());
-    } catch (error) {
-        console.error('Erreur lors du chargement des messages:', error);
-    }
-
-    socket.on('chat message', async (msg) => {
-        try {
-            const result = await pool.query(
-                'INSERT INTO messages (user_id, content) VALUES ($1, $2) RETURNING id, content, created_at',
-                [socket.user.id, msg]
+        
+        // Pour chaque conversation, charger les derniers messages
+        for (let conv of conversations.rows) {
+            const messages = await pool.query(
+                `SELECT pm.*, u.username
+                FROM private_messages pm
+                JOIN users u ON pm.sender_id = u.id
+                WHERE pm.conversation_id = $1
+                ORDER BY pm.created_at DESC
+                LIMIT 50`,
+                [conv.conversation_id]
             );
             
-            const message = {
+            socket.emit('conversation_history', {
+                conversationId: conv.conversation_id,
+                otherUser: {
+                    id: conv.other_user_id,
+                    username: conv.username
+                },
+                messages: messages.rows.reverse()
+            });
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des conversations:', error);
+    }
+
+    // Gestion des messages privés
+    socket.on('private message', async (data) => {
+        try {
+            const { conversationId, content } = data;
+            
+            // Sauvegarder le message
+            const result = await pool.query(
+                'INSERT INTO private_messages (conversation_id, sender_id, content) VALUES ($1, $2, $3) RETURNING *',
+                [conversationId, socket.user.id, content]
+            );
+            
+            // Récupérer les participants de la conversation
+            const participants = await pool.query(
+                'SELECT user_id FROM conversation_participants WHERE conversation_id = $1',
+                [conversationId]
+            );
+            
+            // Envoyer le message à tous les participants
+            const messageWithUser = {
                 ...result.rows[0],
                 username: socket.user.username
             };
             
-            io.emit('chat message', message);
+            participants.rows.forEach(participant => {
+                const participantSocket = findSocketByUserId(participant.user_id);
+                if (participantSocket) {
+                    participantSocket.emit('private message', messageWithUser);
+                }
+            });
         } catch (error) {
-            console.error('Erreur lors de l\'enregistrement du message:', error);
+            console.error('Erreur lors de l\'envoi du message:', error);
         }
-    });
-
-    socket.on('typing', () => {
-        socket.broadcast.emit('user typing', socket.user.username);
-    });
-
-    socket.on('stop typing', () => {
-        socket.broadcast.emit('stop typing', socket.user.username);
     });
 
     socket.on('disconnect', () => {
         console.log(`Utilisateur déconnecté: ${socket.user.username}`);
-    });
-
-    socket.on('private message', async (data) => {
-        try {
-            const participants = await pool.query(
-                'SELECT user_id FROM conversation_participants WHERE conversation_id = $1',
-                [data.conversation_id]
-            );
-            
-            participants.rows.forEach(participant => {
-                if (participant.user_id !== socket.user.id) {
-                    const participantSocket = findSocketByUserId(participant.user_id);
-                    if (participantSocket) {
-                        participantSocket.emit('private message', data);
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Erreur d\'envoi de message privé:', error);
-        }
     });
 });
 

@@ -85,4 +85,15 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Erreur:', error);
         }
     });
+
+    socket.on('conversation_history', (data) => {
+        const { conversationId, otherUser, messages } = data;
+        // Afficher la conversation et les messages
+        displayConversation(conversationId, otherUser, messages);
+    });
+
+    socket.on('private message', (message) => {
+        // Afficher le nouveau message dans la bonne conversation
+        displayMessage(message);
+    });
 }); 
