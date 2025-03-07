@@ -94,7 +94,42 @@ io.on('connection', async (socket) => {
     socket.on('disconnect', () => {
         console.log(`Utilisateur déconnecté: ${socket.user.username}`);
     });
+
+    // Gestion des messages privés en temps réel
+    socket.on('private message', async (data) => {
+        try {
+            // Trouver tous les participants à cette conversation
+            const participants = await pool.query(
+                'SELECT user_id FROM conversation_participants WHERE conversation_id = $1',
+                [data.conversation_id]
+            );
+            
+            // Émettre le message à tous les participants connectés
+            participants.rows.forEach(participant => {
+                // Ne pas renvoyer au émetteur du message
+                if (participant.user_id !== socket.user.id) {
+                    const participantSocket = findSocketByUserId(participant.user_id);
+                    if (participantSocket) {
+                        participantSocket.emit('private message', data);
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Erreur d\'envoi de message privé:', error);
+        }
+    });
 });
+
+// Fonction utilitaire pour trouver un socket par user_id
+function findSocketByUserId(userId) {
+    let targetSocket = null;
+    io.sockets.sockets.forEach(socket => {
+        if (socket.user && socket.user.id === userId) {
+            targetSocket = socket;
+        }
+    });
+    return targetSocket;
+}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
